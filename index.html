@@ -64,6 +64,22 @@
       flex-direction: column;
       align-items: center;
       margin-top: 40px;
+      gap: 20px;
+    }
+
+    .chart-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 50px;
     }
 
     canvas {
@@ -78,8 +94,8 @@
     }
 
     .summary {
-      margin-top: 20px;
       font-size: 1.2rem;
+      max-width: 300px;
     }
 
     .summary span {
@@ -88,6 +104,23 @@
 
     .up-percent { color: #76ff03; }
     .down-percent { color: #ff5252; }
+
+    /* Media Query for Larger Screens */
+    @media (min-width: 768px) {
+      .chart-container {
+        flex-direction: row;
+      }
+
+      .chart-wrapper {
+        flex-direction: row;
+        justify-content: flex-start;
+      }
+
+      .summary {
+        text-align: left;
+        max-width: 350px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -105,7 +138,9 @@
   </div>
 
   <div class="chart-container">
-    <canvas id="pieChart"></canvas>
+    <div class="chart-wrapper">
+      <canvas id="pieChart"></canvas>
+    </div>
 
     <div class="summary">
       <p>Total Voters: <span id="totalVoters">0</span></p>
