@@ -1,0 +1,111 @@
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getDatabase, ref, set, get, child, query, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAD6mX9KvGUX73qxTqmcaYSuHv9ckK0HLY",
+  authDomain: "market-sentiment-tracker.firebaseapp.com",
+  databaseURL: "https://market-sentiment-tracker-default-rtdb.firebaseio.com",
+  projectId: "market-sentiment-tracker",
+  storageBucket: "market-sentiment-tracker.firebasestorage.app",
+  messagingSenderId: "760532947219",
+  appId: "1:760532947219:web:2a806946af76629cd9cae6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Voting data (stored in localStorage for now)
+let upVotes = parseInt(localStorage.getItem('upVotes')) || 0;
+let downVotes = parseInt(localStorage.getItem('downVotes')) || 0;
+
+// Setup chart.js
+const pieCtx = document.getElementById('pieChart').getContext('2d');
+const pieChart = new Chart(pieCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Market Up', 'Market Down'],
+    datasets: [{
+      data: [upVotes, downVotes],
+      backgroundColor: ['#00e676', '#ff1744'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: '#ffffff',
+          font: {
+            weight: 'bold'
+          }
+        }
+      },
+      tooltip: {
+        bodyColor: '#ffffff',
+        titleColor: '#ffffff',
+        backgroundColor: '#333333',
+        borderColor: '#ffffff',
+        borderWidth: 1
+      }
+    }
+  }
+});
+
+// Update the display with the latest data
+function updateDisplay() {
+  const total = upVotes + downVotes;
+  const upPercent = total ? ((upVotes / total) * 100).toFixed(1) : 0;
+  const downPercent = total ? ((downVotes / total) * 100).toFixed(1) : 0;
+
+  pieChart.data.datasets[0].data = [upVotes, downVotes];
+  pieChart.update();
+
+  document.getElementById('totalVoters').textContent = total;
+  document.getElementById('upPercent').textContent = `📈 Up: ${upPercent}%`;
+  document.getElementById('downPercent').textContent = `📉 Down: ${downPercent}%`;
+}
+
+// Store the vote data in Firebase
+function vote(direction) {
+  const timestamp = new Date().toISOString();
+  const sentiment = { vote: direction, timestamp: timestamp };
+
+  // Save to Firebase
+  const sentimentRef = ref(db, 'votes/' + timestamp);
+  set(sentimentRef, sentiment)
+    .then(() => {
+      alert("Vote saved successfully!");
+      updateDisplay();
+    })
+    .catch((error) => {
+      console.error("Error saving vote: ", error);
+    });
+
+  // Update local storage
+  if (direction === 'up') {
+    upVotes++;
+    localStorage.setItem('upVotes', upVotes);
+  } else if (direction === 'down') {
+    downVotes++;
+    localStorage.setItem('downVotes', downVotes);
+  }
+  updateDisplay();
+}
+
+// Fetch historical data based on selected date
+function fetchHistoricalData() {
+  const selectedDate = document.getElementById('selectDate').value;
+  if (selectedDate) {
+    getHistoricalData(selectedDate); // Call function to fetch historical data
+  }
+}
+
+function getHistoricalData(date) {
+  const formattedDate = date + "T00:00:00.000Z";
+
+  const votesRef
